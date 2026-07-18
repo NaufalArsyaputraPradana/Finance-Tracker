@@ -23,7 +23,11 @@ const port = process.env.PORT || 5000;
 export const prisma = new PrismaClient();
 
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite default port
+  origin: [
+    'http://localhost:5173', 
+    'https://finance-tracker-lake-omega.vercel.app',
+    process.env.CLIENT_URL || ''
+  ],
   credentials: true
 }));
 app.use(express.json());
