@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String         @id @default(uuid()) @db.Uuid
+  name         String         @db.VarChar(100)
+  email        String         @unique @db.VarChar(150)
+  passwordHash String         @map("password_hash") @db.VarChar(255)
+  avatarUrl    String?        @map("avatar_url") @db.Text
+  currency     String         @default("IDR") @db.VarChar(10)
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @default(now()) @updatedAt @map("updated_at")
+  categories   Category[]
+  transactions Transaction[]
+  budgets      Budget[]
+  wallets      Wallet[]
+  refreshTokens RefreshToken[]
+  recurringTransactions RecurringTransaction[]
+  goals        Goal[]
+  debts        Debt[]
+
+  @@map("users")
+}
+
+model Wallet {
+  id             String        @id @default(uuid()) @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String        @db.VarChar(100)
+  initialBalance Decimal       @default(0) @map("initial_balance") @db.Decimal(15, 2)
+  icon           String?       @db.VarChar(50)
+  color          String?       @db.VarChar(7)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at")
+  transactions   Transaction[]
+  recurringTransactions RecurringTransaction[]
+
+  @@map("wallets")
+}
+
+model Category {
+  id           String         @id @default(uuid()) @db.Uuid
+  userId       String         @map("user_id") @db.Uuid
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String         @db.VarChar(100)
+  type         String         // 'income' | 'expense'
+  icon         String?        @db.VarChar(50)
+  color        String?        @db.VarChar(7)
+  isDefault    Boolean        @default(false) @map("is_default")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  transactions Transaction[]
+  budgets      Budget[]
+  recurringTransactions RecurringTransaction[]
+
+  @@map("categories")
+}
+
+model Transaction {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  String    @map("category_id") @db.Uuid
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  walletId    String?   @map("wallet_id") @db.Uuid
+  wallet      Wallet?   @relation(fields: [walletId], references: [id], onDelete: SetNull)
+  type        String    // 'income' | 'expense'
+  amount      Decimal   @db.Decimal(15, 2)
+  description String?   @db.Text
+  date        DateTime  @db.Date
+  attachment  String?   @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  @@map("transactions")
+}
+
+model Budget {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId     String   @map("category_id") @db.Uuid
+  category       Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  amount         Decimal  @db.Decimal(15, 2)
+  periodMonth    Int      @map("period_month")
+  periodYear     Int      @map("period_year")
+  alertThreshold Int      @default(80) @map("alert_threshold")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, categoryId, periodMonth, periodYear])
+  @@map("budgets")
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @map("token_hash") @db.VarChar(255)
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("refresh_tokens")
+}
+
+model RecurringTransaction {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String    @map("category_id") @db.Uuid
+  category      Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  walletId      String?   @map("wallet_id") @db.Uuid
+  wallet        Wallet?   @relation(fields: [walletId], references: [id], onDelete: SetNull)
+  type          String    // 'income' | 'expense'
+  amount        Decimal   @db.Decimal(15, 2)
+  description   String?   @db.Text
+  frequency     String    // 'daily' | 'weekly' | 'monthly' | 'yearly'
+  startDate     DateTime  @db.Date
+  endDate       DateTime? @db.Date
+  nextRunDate   DateTime  @db.Date
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  @@map("recurring_transactions")
+}
+
+model Goal {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String    @db.VarChar(150)
+  targetAmount Decimal   @map("target_amount") @db.Decimal(15, 2)
+  savedAmount  Decimal   @default(0) @map("saved_amount") @db.Decimal(15, 2)
+  targetDate   DateTime? @map("target_date") @db.Date
+  icon         String?   @db.VarChar(50)
+  color        String?   @db.VarChar(7)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  @@map("goals")
+}
+
+model Debt {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  personName   String    @map("person_name") @db.VarChar(100)
+  type         String    // 'debt' (kita ngutang) | 'loan' (orang ngutang)
+  amount       Decimal   @db.Decimal(15, 2)
+  amountPaid   Decimal   @default(0) @map("amount_paid") @db.Decimal(15, 2)
+  dueDate      DateTime? @map("due_date") @db.Date
+  status       String    @default("pending") // 'pending' | 'paid'
+  description  String?   @db.Text
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  @@map("debts")
+}
