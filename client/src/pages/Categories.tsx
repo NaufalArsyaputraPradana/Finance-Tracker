@@ -44,6 +44,17 @@ export default function Categories() {
     }
   };
 
+  const handleEdit = (category: Category) => {
+    setEditId(category.id);
+    setFormData({
+      name: category.name,
+      type: category.type,
+      color: category.color || '#3b82f6',
+      icon: category.icon || '📝'
+    });
+    setShowModal(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
