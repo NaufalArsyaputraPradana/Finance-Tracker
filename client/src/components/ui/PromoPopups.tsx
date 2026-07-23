@@ -9,49 +9,54 @@ export default function PromoPopups() {
   const location = useLocation();
 
   useEffect(() => {
-    // Hanya tampilkan promo di halaman utama (opsional, tapi disarankan)
-    if (location.pathname !== '/') return;
+    let smallTimeoutId: NodeJS.Timeout;
 
-    // ===== SMALL PROMO POPUP =====
-    const smallClosed = localStorage.getItem('promo_closed');
-    if (!smallClosed) {
-      setShowSmall(false); // Reset state
-      const smallTimer = setTimeout(() => {
+    // Hanya aktif di halaman Home
+    if (location.pathname === '/' && !localStorage.getItem('promo_closed')) {
+      setShowSmall(false);
+      smallTimeoutId = setTimeout(() => {
         setShowSmall(true);
-      }, 2500); // Tampil setelah 2.5 detik
-      return () => clearTimeout(smallTimer);
+      }, 2500);
+    } else {
+      setShowSmall(false);
     }
+
+    return () => {
+      if (smallTimeoutId) clearTimeout(smallTimeoutId);
+    };
   }, [location.pathname]);
 
   useEffect(() => {
-    if (location.pathname !== '/') return;
+    let largeTimeoutId: NodeJS.Timeout;
+    let largeIntervalId: NodeJS.Timeout;
 
-    // ===== LARGE PROMO POPUP =====
-    const largeClosed = sessionStorage.getItem('large_promo_closed');
-    
-    if (!largeClosed) {
-      setShowLarge(false); // Reset state
-      const largeTimer = setTimeout(() => {
+    // Hanya aktif di halaman Home
+    if (location.pathname === '/' && !sessionStorage.getItem('large_promo_closed')) {
+      setShowLarge(false);
+      largeTimeoutId = setTimeout(() => {
         setShowLarge(true);
         
-        // Start countdown timer (5 seconds)
-        let time = 5;
-        setTimeLeft(time);
+        let count = 5;
+        setTimeLeft(count);
         
-        const countdown = setInterval(() => {
-          time -= 1;
-          setTimeLeft(Math.max(0, time));
-          if (time <= 0) {
-            clearInterval(countdown);
-            handleCloseLarge();
+        largeIntervalId = setInterval(() => {
+          count--;
+          setTimeLeft(Math.max(0, count));
+          if (count <= 0) {
+            clearInterval(largeIntervalId);
+            setShowLarge(false);
+            sessionStorage.setItem('large_promo_closed', 'true');
           }
         }, 1000);
-
-        return () => clearInterval(countdown);
-      }, 1000); // Tampil setelah 1 detik
-
-      return () => clearTimeout(largeTimer);
+      }, 1000);
+    } else {
+      setShowLarge(false);
     }
+
+    return () => {
+      if (largeTimeoutId) clearTimeout(largeTimeoutId);
+      if (largeIntervalId) clearInterval(largeIntervalId);
+    };
   }, [location.pathname]);
 
   const handleCloseSmall = () => {
