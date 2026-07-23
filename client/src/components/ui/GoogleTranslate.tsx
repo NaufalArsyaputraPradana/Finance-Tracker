@@ -32,14 +32,28 @@ export default function GoogleTranslate() {
   const doGTranslate = (langPair: string) => {
     if (!langPair) return;
     const lang = langPair.split('|')[1];
-    const selects = document.getElementsByTagName('select');
-    for (let i = 0; i < selects.length; i++) {
-      if (/goog-te-combo/.test(selects[i].className)) {
-        selects[i].value = lang;
-        selects[i].dispatchEvent(new Event('change'));
-        break;
+    
+    // Coba mencari elemen select Google Translate (bisa jadi belum selesai dirender)
+    const checkAndTranslate = (attempts = 0) => {
+      const selects = document.getElementsByTagName('select');
+      let found = false;
+      for (let i = 0; i < selects.length; i++) {
+        if (/goog-te-combo/.test(selects[i].className)) {
+          selects[i].value = lang;
+          // Harus menggunakan event bubbles agar terbaca oleh listener internal Google
+          selects[i].dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+          found = true;
+          break;
+        }
       }
-    }
+      
+      // Jika belum ketemu, coba lagi hingga 5x (jeda 500ms)
+      if (!found && attempts < 5) {
+        setTimeout(() => checkAndTranslate(attempts + 1), 500);
+      }
+    };
+    
+    checkAndTranslate();
   };
 
   const toggleLanguage = () => {

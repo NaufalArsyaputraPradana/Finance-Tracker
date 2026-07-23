@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { X, Rocket, ArrowRight } from 'lucide-react';
 
 export default function PromoPopups() {
   const [showSmall, setShowSmall] = useState(false);
   const [showLarge, setShowLarge] = useState(false);
   const [timeLeft, setTimeLeft] = useState(5);
+  const location = useLocation();
 
   useEffect(() => {
     // Logic for Small Promo
-    const smallClosed = localStorage.getItem('promo_closed');
+    // Menggunakan sessionStorage agar muncul 1x per sesi (bukan hilang selamanya seperti localStorage)
+    const smallClosed = sessionStorage.getItem('promo_closed');
     if (!smallClosed) {
+      setShowSmall(false); // Reset state jika navigasi
       const smallTimer = setTimeout(() => {
         setShowSmall(true);
       }, 4000); // Show after 4 seconds
       return () => clearTimeout(smallTimer);
     }
-  }, []);
+  }, [location.pathname]); // Re-run ketika rute berubah
 
   useEffect(() => {
     // Logic for Large Promo (Exit Intent)
@@ -48,7 +52,7 @@ export default function PromoPopups() {
 
   const handleCloseSmall = () => {
     setShowSmall(false);
-    localStorage.setItem('promo_closed', 'true');
+    sessionStorage.setItem('promo_closed', 'true');
   };
 
   const handleCloseLarge = () => {
