@@ -9,21 +9,28 @@ export default function PromoPopups() {
   const location = useLocation();
 
   useEffect(() => {
+    // Hanya tampilkan promo di halaman utama (opsional, tapi disarankan)
+    if (location.pathname !== '/') return;
+
     // ===== SMALL PROMO POPUP =====
     const smallClosed = localStorage.getItem('promo_closed');
     if (!smallClosed) {
+      setShowSmall(false); // Reset state
       const smallTimer = setTimeout(() => {
         setShowSmall(true);
       }, 2500); // Tampil setelah 2.5 detik
       return () => clearTimeout(smallTimer);
     }
-  }, []);
+  }, [location.pathname]);
 
   useEffect(() => {
+    if (location.pathname !== '/') return;
+
     // ===== LARGE PROMO POPUP =====
     const largeClosed = sessionStorage.getItem('large_promo_closed');
     
     if (!largeClosed) {
+      setShowLarge(false); // Reset state
       const largeTimer = setTimeout(() => {
         setShowLarge(true);
         
@@ -45,7 +52,7 @@ export default function PromoPopups() {
 
       return () => clearTimeout(largeTimer);
     }
-  }, []);
+  }, [location.pathname]);
 
   const handleCloseSmall = () => {
     setShowSmall(false);
