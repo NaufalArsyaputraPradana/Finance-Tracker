@@ -64,3 +64,10 @@
   50% { transform: translateY(-20px); }
   100% { transform: translateY(0px); }
 }
+
+/* Google Translate Anti-Spam Overrides */
+.goog-te-banner-frame, .goog-te-gadget img, .skiptranslate, #goog-gt-tt { display: none !important; }
+body { top: 0 !important; position: static !important; }
+.VIpgJd-ZVi9od-ORHb-OEVmcd { display: none !important; }
+.goog-tooltip, .goog-tooltip:hover { display: none !important; }
+.goog-text-highlight { background-color: transparent !important; border: none !important; box-shadow: none !important; }
