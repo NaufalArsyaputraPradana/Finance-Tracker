@@ -9,50 +9,47 @@ export default function PromoPopups() {
   const location = useLocation();
 
   useEffect(() => {
-    // Logic for Small Promo
-    // Menggunakan sessionStorage agar muncul 1x per sesi (bukan hilang selamanya seperti localStorage)
-    const smallClosed = sessionStorage.getItem('promo_closed');
+    // ===== SMALL PROMO POPUP =====
+    const smallClosed = localStorage.getItem('promo_closed');
     if (!smallClosed) {
-      setShowSmall(false); // Reset state jika navigasi
       const smallTimer = setTimeout(() => {
         setShowSmall(true);
-      }, 4000); // Show after 4 seconds
+      }, 2500); // Tampil setelah 2.5 detik
       return () => clearTimeout(smallTimer);
     }
-  }, [location.pathname]); // Re-run ketika rute berubah
+  }, []);
 
   useEffect(() => {
-    // Logic for Large Promo (Exit Intent)
+    // ===== LARGE PROMO POPUP =====
     const largeClosed = sessionStorage.getItem('large_promo_closed');
-    let largeShownInThisSession = false;
-
-    const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 0 && !largeClosed && !largeShownInThisSession) {
+    
+    if (!largeClosed) {
+      const largeTimer = setTimeout(() => {
         setShowLarge(true);
-        largeShownInThisSession = true;
         
-        // Start countdown timer
-        let time = 10;
+        // Start countdown timer (5 seconds)
+        let time = 5;
         setTimeLeft(time);
         
         const countdown = setInterval(() => {
           time -= 1;
-          setTimeLeft(time > 0 ? time : 0);
+          setTimeLeft(Math.max(0, time));
           if (time <= 0) {
             clearInterval(countdown);
             handleCloseLarge();
           }
         }, 1000);
-      }
-    };
 
-    document.addEventListener('mouseleave', handleMouseLeave);
-    return () => document.removeEventListener('mouseleave', handleMouseLeave);
+        return () => clearInterval(countdown);
+      }, 1000); // Tampil setelah 1 detik
+
+      return () => clearTimeout(largeTimer);
+    }
   }, []);
 
   const handleCloseSmall = () => {
     setShowSmall(false);
-    sessionStorage.setItem('promo_closed', 'true');
+    localStorage.setItem('promo_closed', 'true');
   };
 
   const handleCloseLarge = () => {

@@ -11,6 +11,44 @@ declare global {
 export default function GoogleTranslate() {
   const [currentLang, setCurrentLang] = useState('id');
 
+  const drawFlag = (canvasId: string, lang: string) => {
+    const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    if (lang === 'id') {
+        ctx.fillStyle = '#CE1126';
+        ctx.fillRect(0, 0, w, h/2);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, h/2, w, h/2);
+    } else {
+        // UK Flag simplified
+        ctx.fillStyle = '#012169';
+        ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = h * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0); ctx.lineTo(w, h);
+        ctx.moveTo(w, 0); ctx.lineTo(0, h);
+        ctx.moveTo(0, h/2); ctx.lineTo(w, h/2);
+        ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h);
+        ctx.stroke();
+        ctx.strokeStyle = '#C8102E';
+        ctx.lineWidth = h * 0.1;
+        ctx.beginPath();
+        ctx.moveTo(0, h/2); ctx.lineTo(w, h/2);
+        ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h);
+        ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(0, 0, w, h);
+  };
+
   useEffect(() => {
     // Inject Google Translate script only once
     if (!document.getElementById('google-translate-script')) {
@@ -27,6 +65,9 @@ export default function GoogleTranslate() {
       script.async = true;
       document.body.appendChild(script);
     }
+    
+    // Draw initial flag
+    drawFlag('flagCanvasGlobal', 'id');
   }, []);
 
   const doGTranslate = (langPair: string) => {
@@ -60,9 +101,11 @@ export default function GoogleTranslate() {
     if (currentLang === 'id') {
       doGTranslate('id|en');
       setCurrentLang('en');
+      drawFlag('flagCanvasGlobal', 'en');
     } else {
       doGTranslate('en|id');
       setCurrentLang('id');
+      drawFlag('flagCanvasGlobal', 'id');
     }
   };
 
@@ -77,7 +120,7 @@ export default function GoogleTranslate() {
         className="flex items-center gap-2 px-4 py-3 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:scale-105 transition-all text-sm font-bold text-gray-700 dark:text-gray-200"
         title="Ubah Bahasa / Translate"
       >
-        <span className="text-xl leading-none">{currentLang === 'id' ? '🇮🇩' : '🇬🇧'}</span>
+        <canvas id="flagCanvasGlobal" width="20" height="15" className="rounded-sm"></canvas>
         <span>{currentLang === 'id' ? 'ID' : 'EN'}</span>
       </button>
     </div>
